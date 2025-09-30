@@ -2,7 +2,7 @@
 
 const translations = {
     en: {
-        'tagline': 'Electronic Music Producer',
+        'tagline': 'Tagline english',
         'listen-now': 'Listen Now',
         'latest-releases': 'Latest Releases',
         'connect': 'Connect',
@@ -16,6 +16,22 @@ const translations = {
         'press-kit': 'Press Kit',
         'contact': 'Contact',
         'privacy': 'Privacy'
+    },
+    ru: {
+        'tagline': 'Тэглайн',
+        'listen-now': 'Слушать сейчас',
+        'latest-releases': 'Последние релизы',
+        'connect': 'Подключиться',
+        'new-single': 'Новый сингл',
+        'previous-track': 'Предыдущий трек',
+        'album-name': 'Название Альбома',
+        'september-2025': 'Сентябрь 2025',
+        'august-2025': 'Август 2025',
+        'july-2025': 'Июль 2025',
+        'footer-rights': 'Все права защищены',
+        'press-kit': 'Пресс-кит',
+        'contact': 'Контакт',
+        'privacy': 'Конфиденциальность'
     },
     de: {
         'tagline': 'Elektronischer Musikproduzent',
