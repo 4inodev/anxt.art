@@ -53,7 +53,8 @@ body {
     align-items: center;
     justify-content: center;
     position: relative;
-    background: linear-gradient(135deg, var(--black) 0%, var(--red-darker) 100%);
+    background: url('/public/hero_bg.jpg') no-repeat center center;
+    background-size: cover; /* scales image to fill hero */
 }
 
 .hero-content {

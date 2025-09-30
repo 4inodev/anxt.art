@@ -211,24 +211,31 @@ window.addEventListener('load', () => {
     }, 100);
 });
 
-// Interactive particles for hero section
+// Randomly place crow images in hero section
 const heroSection = document.querySelector('.hero');
 if (heroSection) {
+    const crowFiles = ['crow1.png', 'crow2.png', 'crow3.png']; // you can add more
+    const minScale = 0.05; // minimum scale
+    const maxScale = 0.10; // maximum scale
+
     for (let i = 0; i < 30; i++) {
-        const particle = document.createElement('div');
-        particle.style.cssText = `
+        const img = document.createElement('img');
+        const crow = crowFiles[Math.floor(Math.random() * crowFiles.length)];
+
+        const scale = Math.random() * (maxScale - minScale) + minScale;
+        const rotation = Math.random() * 360; // degrees
+
+        img.src = `public/crows/${crow}`;
+        img.style.cssText = `
             position: absolute;
-            width: ${Math.random() * 4 + 2}px;
-            height: ${Math.random() * 4 + 2}px;
-            background: rgba(171, 23, 7, ${Math.random() * 0.5 + 0.2});
-            border-radius: 50%;
             left: ${Math.random() * 100}%;
             top: ${Math.random() * 100}%;
-            animation: float ${Math.random() * 10 + 10}s infinite ease-in-out;
-            animation-delay: ${Math.random() * 5}s;
-            filter: blur(1px);
+            transform: translate(-50%, -50%) scale(${scale}) rotate(${rotation}deg);
+            transform-origin: center;
+            pointer-events: none;
+            user-select: none;
         `;
-        heroSection.appendChild(particle);
+        heroSection.appendChild(img);
     }
 }
 
