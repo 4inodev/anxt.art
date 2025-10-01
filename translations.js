@@ -2,7 +2,7 @@
 
 const translations = {
     ru: {
-        'tagline': 'Лорем ипсум',
+        'tagline': '.',
         'listen-now': 'Лорем ипсум',
         'latest-releases': 'Лорем ипсум',
         'socials': 'Лорем ипсум',
