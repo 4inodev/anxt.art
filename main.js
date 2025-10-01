@@ -1,498 +1,621 @@
 // main.js
+// ============================================================
+// App bootstrap with clear sections, safe listeners, and helpers
+// ============================================================
 
-// ============================================
-// LANGUAGE DETECTION & SWITCHING
-// ============================================
+(() => {
+  'use strict';
 
-let currentLanguage = 'en';
+  // -----------------------------
+  // CONFIG & CONSTANTS
+  // -----------------------------
+  const SUPPORTED_LANGS = ['en', 'de', 'es', 'fr'];
+  const STORAGE_KEYS = { preferredLanguage: 'preferredLanguage' };
+  const SELECTORS = {
+    langBtn: '.lang-btn',
+    i18n: '[data-i18n]',
+    hero: '.hero',
+    heroContent: '.hero-content',
+    streamingBtn: '.streaming-btn',
+    releaseCard: '.release-card',
+    socialLink: '.social-link',
+    socialIcon: '.social-icon',
+    playBtn: '.play-btn',
+    tagline: '.tagline',
+    logoImage: '.logo-image',
+    anchor: 'a[href^="#"]',
+    aos: '[data-aos]',
+    iframeLazy: 'iframe[data-src]',
+  };
 
-// Detect browser language
-function detectBrowserLanguage() {
-    const browserLang = navigator.language || navigator.userLanguage;
-    const langCode = browserLang.split('-')[0]; // Get 'en' from 'en-US'
-    
-    // Check if we support this language
-    const supportedLanguages = ['en', 'de', 'es', 'fr'];
-    return supportedLanguages.includes(langCode) ? langCode : 'en';
-}
+  // -----------------------------
+  // UTILITIES
+  // -----------------------------
+  const raf = window.requestAnimationFrame.bind(window);
+  const on = (el, evt, fn, opts) => el.addEventListener(evt, fn, opts);
+  const qs = (sel, root = document) => root.querySelector(sel);
+  const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
-// Load language from localStorage or detect
-function getInitialLanguage() {
-    const savedLang = localStorage.getItem('preferredLanguage');
-    if (savedLang) {
-        return savedLang;
-    }
-    return detectBrowserLanguage();
-}
+  // Passive listener options for scroll/touch for smoother performance
+  const passive = { passive: true };
 
-// Translate page content
-function translatePage(lang) {
+  // -----------------------------
+  // INTERNATIONALIZATION
+  // -----------------------------
+  let currentLanguage = 'en';
+
+  function detectBrowserLanguage() {
+    const browserLang = navigator.language || navigator.userLanguage || 'en';
+    const code = browserLang.split('-')[0].toLowerCase();
+    return SUPPORTED_LANGS.includes(code) ? code : 'en';
+  }
+
+  function getInitialLanguage() {
+    return localStorage.getItem(STORAGE_KEYS.preferredLanguage) || detectBrowserLanguage();
+  }
+
+  function translatePage(lang) {
     currentLanguage = lang;
-    
-    // Update all elements with data-i18n attribute
-    document.querySelectorAll('[data-i18n]').forEach(element => {
-        const key = element.getAttribute('data-i18n');
-        if (translations[lang] && translations[lang][key]) {
-            element.textContent = translations[lang][key];
-        }
-    });
-    
-    // Save preference
-    localStorage.setItem('preferredLanguage', lang);
-    
-    // Update active button
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.getAttribute('data-lang') === lang) {
-            btn.classList.add('active');
-        }
-    });
-    
-    // Update HTML lang attribute
-    document.documentElement.setAttribute('lang', lang);
-    
-    // Trigger custom event for other components
-    window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: lang } }));
-}
 
-
-// Smooth scroll animation observer
-const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -100px 0px'
-};
-
-const animateOnScroll = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.classList.add('aos-animate');
-        }
-    });
-}, observerOptions);
-
-// Observe all elements with data-aos attribute
-// Initialize language on page load
-document.addEventListener('DOMContentLoaded', () => {
-    const initialLang = getInitialLanguage();
-    translatePage(initialLang);
-    
-    // Setup language switcher buttons
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const lang = this.getAttribute('data-lang');
-            translatePage(lang);
-            
-            // Add click animation
-            this.style.transform = 'scale(0.9)';
-            setTimeout(() => {
-                this.style.transform = 'scale(1)';
-            }, 100);
-        });
-    });
-    
-    // Rest of your existing DOMContentLoaded code...
-    const elementsToAnimate = document.querySelectorAll('[data-aos]');
-    elementsToAnimate.forEach(el => {
-        const delay = el.getAttribute('data-aos-delay');
-        if (delay) {
-            el.style.transitionDelay = `${delay}ms`;
-        }
-        animateOnScroll.observe(el);
-    });
-});
-
-// Listen for language changes to update dynamic content
-window.addEventListener('languageChanged', (e) => {
-    console.log(`Language changed to: ${e.detail.language}`);
-    // You can update any dynamic content here
-});
-
-
-// Parallax effect for hero section
-window.addEventListener('scroll', () => {
-    const scrolled = window.pageYOffset;
-    const hero = document.querySelector('.hero-content');
-    if (hero) {
-        hero.style.transform = `translateY(${scrolled * 0.5}px)`;
-        hero.style.opacity = 1 - (scrolled / 600);
+    // Guard: translations must be defined globally
+    if (typeof window.translations !== 'object') {
+      console.warn('[i18n] Missing global `translations` object');
+      return;
     }
-});
 
-// Smooth scroll for anchor links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
+    qsa(SELECTORS.i18n).forEach((el) => {
+      const key = el.getAttribute('data-i18n');
+      const value = window.translations?.[lang]?.[key];
+      if (typeof value === 'string') el.textContent = value;
+    });
+
+    localStorage.setItem(STORAGE_KEYS.preferredLanguage, lang);
+
+    // Toggle active state on language buttons
+    qsa(SELECTORS.langBtn).forEach((btn) => {
+      btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+    });
+
+    document.documentElement.setAttribute('lang', lang);
+
+    // Broadcast in case other components need to react
+    window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: lang } }));
+  }
+
+  // -----------------------------
+  // AOS (Animate on Scroll) via IntersectionObserver
+  // -----------------------------
+  const animateOnScrollObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('aos-animate');
+          animateOnScrollObserver.unobserve(entry.target);
+        }
+      }
+    },
+    { threshold: 0.1, rootMargin: '0px 0px -100px 0px' }
+  );
+
+  function initAOS() {
+    qsa(SELECTORS.aos).forEach((el) => {
+      const delay = el.getAttribute('data-aos-delay');
+      if (delay) el.style.transitionDelay = `${parseInt(delay, 10)}ms`;
+      animateOnScrollObserver.observe(el);
+    });
+  }
+
+  // -----------------------------
+  // PARALLAX (hero content)
+  // -----------------------------
+  let lastScrollY = window.pageYOffset || 0;
+  let ticking = false;
+
+  function parallaxTick() {
+    ticking = false;
+    const hero = qs(SELECTORS.heroContent);
+    if (!hero) return;
+    const y = lastScrollY;
+    hero.style.transform = `translateY(${y * 0.5}px)`;
+    hero.style.opacity = String(1 - clamp(y / 600, 0, 1));
+  }
+
+  function onScroll() {
+    lastScrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+    if (!ticking) {
+      ticking = true;
+      raf(parallaxTick);
+      raf(updateProgressBar);
+      raf(updateLogoPulse);
+    }
+  }
+
+  // -----------------------------
+  // SMOOTH IN-PAGE ANCHOR SCROLL
+  // -----------------------------
+  function initSmoothAnchors() {
+    qsa(SELECTORS.anchor).forEach((a) => {
+      on(a, 'click', (e) => {
+        const href = a.getAttribute('href');
+        if (!href) return;
+        const target = qs(href);
+        if (!target) return;
         e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
     });
-});
+  }
 
-// Add ripple effect to streaming buttons
-document.querySelectorAll('.streaming-btn').forEach(button => {
-    button.addEventListener('click', function(e) {
-        const ripple = document.createElement('span');
-        const rect = this.getBoundingClientRect();
-        const size = Math.max(rect.width, rect.height);
-        const x = e.clientX - rect.left - size / 2;
-        const y = e.clientY - rect.top - size / 2;
-        
-        ripple.style.width = ripple.style.height = size + 'px';
-        ripple.style.left = x + 'px';
-        ripple.style.top = y + 'px';
-        ripple.classList.add('ripple');
-        
-        this.appendChild(ripple);
-        
-        setTimeout(() => ripple.remove(), 600);
+  // -----------------------------
+  // RIPPLE EFFECT (buttons)
+  // -----------------------------
+  function attachRipple(el) {
+    on(el, 'click', (e) => {
+      const rect = el.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      const span = document.createElement('span');
+      const x = e.clientX - rect.left - size / 2;
+      const y = e.clientY - rect.top - size / 2;
+
+      span.className = 'ripple';
+      span.style.width = `${size}px`;
+      span.style.height = `${size}px`;
+      span.style.left = `${x}px`;
+      span.style.top = `${y}px`;
+      span.style.position = 'absolute';
+      span.style.borderRadius = '50%';
+      span.style.pointerEvents = 'none';
+      // If your CSS defines .ripple animation, remove next line
+      span.style.animation = 'ripple 600ms ease-out';
+      el.style.position ||= 'relative';
+
+      el.appendChild(span);
+      setTimeout(() => span.remove(), 600);
     });
-});
+  }
 
-// Cursor trail effect
-const cursor = {
-    x: 0,
-    y: 0,
-    trails: []
-};
+  function initRipples() {
+    qsa(SELECTORS.streamingBtn).forEach(attachRipple);
+  }
 
-for (let i = 0; i < 5; i++) {
-    const trail = document.createElement('div');
-    trail.className = 'cursor-trail';
-    trail.style.cssText = `
-        position: fixed;
-        width: 8px;
-        height: 8px;
-        background: rgba(171, 23, 7, ${0.5 - i * 0.1});
-        border-radius: 50%;
-        pointer-events: none;
-        z-index: 9998;
-        transition: transform 0.1s ease-out;
-        mix-blend-mode: screen;
-    `;
-    document.body.appendChild(trail);
-    cursor.trails.push(trail);
-}
+  // -----------------------------
+  // CURSOR TRAIL
+  // -----------------------------
+  const cursor = { x: 0, y: 0, trails: [] };
 
-document.addEventListener('mousemove', (e) => {
-    cursor.x = e.clientX;
-    cursor.y = e.clientY;
-});
+  function initCursorTrail() {
+    for (let i = 0; i < 5; i++) {
+      const trail = document.createElement('div');
+      trail.className = 'cursor-trail';
+      Object.assign(trail.style, {
+        position: 'fixed',
+        width: '8px',
+        height: '8px',
+        background: `rgba(171, 23, 7, ${0.5 - i * 0.1})`,
+        borderRadius: '50%',
+        pointerEvents: 'none',
+        zIndex: 9998,
+        transition: 'transform 0.1s ease-out',
+        mixBlendMode: 'screen',
+      });
+      document.body.appendChild(trail);
+      cursor.trails.push(trail);
+    }
 
-function animateTrails() {
-    let x = cursor.x;
-    let y = cursor.y;
-    
-    cursor.trails.forEach((trail, index) => {
+    on(document, 'mousemove', (e) => {
+      cursor.x = e.clientX;
+      cursor.y = e.clientY;
+    });
+
+    (function animate() {
+      let x = cursor.x;
+      let y = cursor.y;
+      cursor.trails.forEach((trail, index) => {
         trail.style.transform = `translate(${x - 4}px, ${y - 4}px) scale(${1 - index * 0.15})`;
-        
-        const nextTrail = cursor.trails[index + 1];
-        if (nextTrail) {
-            const rect = trail.getBoundingClientRect();
-            x = rect.left + 4;
-            y = rect.top + 4;
-        }
-    });
-    
-    requestAnimationFrame(animateTrails);
-}
+        const rect = trail.getBoundingClientRect();
+        x = rect.left + 4;
+        y = rect.top + 4;
+      });
+      raf(animate);
+    })();
+  }
 
-animateTrails();
-
-// Add loading animation
-window.addEventListener('load', () => {
+  // -----------------------------
+  // PAGE FADE-IN ON LOAD
+  // -----------------------------
+  function fadeInOnLoad() {
     document.body.style.opacity = '0';
     setTimeout(() => {
-        document.body.style.transition = 'opacity 0.5s ease';
-        document.body.style.opacity = '1';
+      document.body.style.transition = 'opacity 0.5s ease';
+      document.body.style.opacity = '1';
     }, 100);
-});
+  }
 
-// Randomly place crow images in hero section
-const heroSection = document.querySelector('.hero');
-if (heroSection) {
-    const crowFiles = ['crow1.png', 'crow2.png', 'crow3.png']; // you can add more
-    const minScale = 0.05; // minimum scale
-    const maxScale = 0.10; // maximum scale
+  // -----------------------------
+  // RANDOM CROWS IN HERO
+  // -----------------------------
+  function scatterCrows() {
+    const hero = qs(SELECTORS.hero);
+    if (!hero) return;
 
-    for (let i = 0; i < 30; i++) {
-        const img = document.createElement('img');
-        const crow = crowFiles[Math.floor(Math.random() * crowFiles.length)];
+    const crowFiles = ['crow1.png', 'crow2.png', 'crow3.png'];
+    const minScale = 0.05;
+    const maxScale = 0.1;
+    const count = 30;
 
-        const scale = Math.random() * (maxScale - minScale) + minScale;
-        const rotation = Math.random() * 360; // degrees
+    for (let i = 0; i < count; i++) {
+      const img = document.createElement('img');
+      const crow = crowFiles[Math.floor(Math.random() * crowFiles.length)];
+      const scale = Math.random() * (maxScale - minScale) + minScale;
+      const rotation = Math.floor(Math.random() * 360);
 
-        img.src = `public/crows/${crow}`;
-        img.style.cssText = `
-            position: absolute;
-            left: ${Math.random() * 100}%;
-            top: ${Math.random() * 100}%;
-            transform: translate(-50%, -50%) scale(${scale}) rotate(${rotation}deg);
-            transform-origin: center;
-            pointer-events: none;
-            user-select: none;
-        `;
-        heroSection.appendChild(img);
+      img.src = `public/crows/${crow}`;
+      Object.assign(img.style, {
+        position: 'absolute',
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * 100}%`,
+        transform: `translate(-50%, -50%) scale(${scale}) rotate(${rotation}deg)`,
+        transformOrigin: 'center',
+        pointerEvents: 'none',
+        userSelect: 'none',
+      });
+
+      hero.appendChild(img);
     }
-}
+  }
 
-// Streaming button hover sound effect (visual only)
-document.querySelectorAll('.streaming-btn').forEach(btn => {
-    btn.addEventListener('mouseenter', function() {
-        this.style.setProperty('--hover-intensity', '1');
+  // -----------------------------
+  // HOVER INTENSITY (visual-only sound hint)
+  // -----------------------------
+  function initStreamingHover() {
+    qsa(SELECTORS.streamingBtn).forEach((btn) => {
+      on(btn, 'mouseenter', () => btn.style.setProperty('--hover-intensity', '1'));
+      on(btn, 'mouseleave', () => btn.style.setProperty('--hover-intensity', '0'));
     });
-    
-    btn.addEventListener('mouseleave', function() {
-        this.style.setProperty('--hover-intensity', '0');
-    });
-});
+  }
 
-// Release card play button functionality
-document.querySelectorAll('.play-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+  // -----------------------------
+  // RELEASE CARD: PLAY BUTTON PULSE
+  // -----------------------------
+  function initPlayButtons() {
+    qsa(SELECTORS.playBtn).forEach((btn) => {
+      on(btn, 'click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        
-        // Pulse animation
         btn.style.transform = 'scale(0.9)';
-        setTimeout(() => {
-            btn.style.transform = 'scale(1.1)';
-        }, 100);
-        setTimeout(() => {
-            btn.style.transform = 'scale(1)';
-        }, 200);
+        setTimeout(() => (btn.style.transform = 'scale(1.1)'), 100);
+        setTimeout(() => (btn.style.transform = 'scale(1)'), 200);
+      });
     });
-});
+  }
 
-// Continuation of main.js
+  // -----------------------------
+  // SCROLL PROGRESS BAR
+  // -----------------------------
+  let progressBar;
+  function initProgressBar() {
+    progressBar = document.createElement('div');
+    Object.assign(progressBar.style, {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      height: '3px',
+      background: 'linear-gradient(90deg, var(--red-accent), var(--red-dark))',
+      width: '0%',
+      zIndex: 10000,
+      transition: 'width 0.1s ease',
+      boxShadow: '0 0 10px rgba(171, 23, 7, 0.5)',
+    });
+    document.body.appendChild(progressBar);
+  }
 
-// Scroll progress indicator (continued)
-const progressBar = document.createElement('div');
-progressBar.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--red-accent), var(--red-dark));
-    width: 0%;
-    z-index: 10000;
-    transition: width 0.1s ease;
-    box-shadow: 0 0 10px rgba(171, 23, 7, 0.5);
-`;
-document.body.appendChild(progressBar);
+  function updateProgressBar() {
+    if (!progressBar) return;
+    const doc = document.documentElement;
+    const max = doc.scrollHeight - doc.clientHeight;
+    const pct = max > 0 ? (lastScrollY / max) * 100 : 0;
+    progressBar.style.width = `${pct}%`;
+  }
 
-window.addEventListener('scroll', () => {
-    const windowHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-    const scrolled = (window.pageYOffset / windowHeight) * 100;
-    progressBar.style.width = scrolled + '%';
-});
-
-// Add hover effect for social links
-document.querySelectorAll('.social-link').forEach(link => {
-    link.addEventListener('mouseenter', function() {
-        const icon = this.querySelector('.social-icon');
+  // -----------------------------
+  // SOCIAL LINK HOVER GLOW
+  // -----------------------------
+  function initSocialHover() {
+    qsa(SELECTORS.socialLink).forEach((link) => {
+      const icon = qs(SELECTORS.socialIcon, link);
+      if (!icon) return;
+      on(link, 'mouseenter', () => {
         icon.style.filter = 'brightness(1.2) drop-shadow(0 0 20px rgba(171, 23, 7, 0.6))';
-    });
-    
-    link.addEventListener('mouseleave', function() {
-        const icon = this.querySelector('.social-icon');
+      });
+      on(link, 'mouseleave', () => {
         icon.style.filter = 'none';
+      });
     });
-});
+  }
 
-// Animate release cards on scroll with stagger effect
-const releaseCards = document.querySelectorAll('.release-card');
-const releaseObserver = new IntersectionObserver((entries) => {
-    entries.forEach((entry, index) => {
-        if (entry.isIntersecting) {
+  // -----------------------------
+  // RELEASE CARDS: ENTER ANIMATION
+  // -----------------------------
+  function initReleaseCards() {
+    const cards = qsa(SELECTORS.releaseCard);
+    if (!cards.length) return;
+
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // stagger by DOM order (index is not reliable here, compute from dataset)
+            const idx = Number(entry.target.dataset.index || 0);
             setTimeout(() => {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0) scale(1)';
-            }, index * 150);
-        }
+              entry.target.style.opacity = '1';
+              entry.target.style.transform = 'translateY(0) scale(1)';
+            }, idx * 150);
+            obs.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.2 }
+    );
+
+    cards.forEach((card, i) => {
+      card.dataset.index = String(i);
+      Object.assign(card.style, {
+        opacity: '0',
+        transform: 'translateY(50px) scale(0.95)',
+        transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+      });
+      obs.observe(card);
     });
-}, { threshold: 0.2 });
+  }
 
-releaseCards.forEach(card => {
-    card.style.opacity = '0';
-    card.style.transform = 'translateY(50px) scale(0.95)';
-    card.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
-    releaseObserver.observe(card);
-});
+  // -----------------------------
+  // CARD CURSOR GLOW
+  // -----------------------------
+  function initCardGlow() {
+    const targets = qsa([SELECTORS.streamingBtn, SELECTORS.releaseCard, SELECTORS.socialLink].join(', '));
+    targets.forEach((el) => {
+      let glow = null;
 
-// Interactive glow effect following cursor on cards
-document.querySelectorAll('.streaming-btn, .release-card, .social-link').forEach(card => {
-    card.addEventListener('mousemove', function(e) {
-        const rect = this.getBoundingClientRect();
+      on(el, 'pointerenter', () => {
+        if (!glow) {
+          glow = document.createElement('div');
+          glow.className = 'card-glow';
+          Object.assign(glow.style, {
+            position: 'absolute',
+            width: '200px',
+            height: '200px',
+            background: 'radial-gradient(circle, rgba(171, 23, 7, 0.3) 0%, transparent 70%)',
+            borderRadius: '50%',
+            pointerEvents: 'none',
+            transform: 'translate(-50%, -50%)',
+            transition: 'opacity 0.3s ease',
+            left: '0px',
+            top: '0px',
+            opacity: '0',
+          });
+          el.appendChild(glow);
+          el.style.position ||= 'relative';
+        }
+      });
+
+      on(el, 'pointermove', (e) => {
+        const rect = el.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        
-        this.style.setProperty('--mouse-x', `${x}px`);
-        this.style.setProperty('--mouse-y', `${y}px`);
-        
-        // Create glow effect
-        if (!this.querySelector('.card-glow')) {
-            const glow = document.createElement('div');
-            glow.className = 'card-glow';
-            glow.style.cssText = `
-                position: absolute;
-                width: 200px;
-                height: 200px;
-                background: radial-gradient(circle, rgba(171, 23, 7, 0.3) 0%, transparent 70%);
-                border-radius: 50%;
-                pointer-events: none;
-                transform: translate(-50%, -50%);
-                transition: opacity 0.3s ease;
-            `;
-            this.appendChild(glow);
-        }
-        
-        const glow = this.querySelector('.card-glow');
-        if (glow) {
-            glow.style.left = `${x}px`;
-            glow.style.top = `${y}px`;
-            glow.style.opacity = '1';
-        }
-    });
-    
-    card.addEventListener('mouseleave', function() {
-        const glow = this.querySelector('.card-glow');
-        if (glow) {
-            glow.style.opacity = '0';
-        }
-    });
-});
+        if (!glow) return;
+        glow.style.left = `${x}px`;
+        glow.style.top = `${y}px`;
+        glow.style.opacity = '1';
+      });
 
-// Typing animation for tagline
-const tagline = document.querySelector('.tagline');
-if (tagline) {
-    const text = tagline.textContent;
-    tagline.textContent = '';
-    tagline.style.opacity = '1';
-    
+      on(el, 'pointerleave', () => {
+        if (glow) glow.style.opacity = '0';
+      });
+    });
+  }
+
+  // -----------------------------
+  // TAGLINE TYPEWRITER
+  // -----------------------------
+  function initTypewriter() {
+    const el = qs(SELECTORS.tagline);
+    if (!el) return;
+    const text = el.textContent;
+    el.textContent = '';
+    el.style.opacity = '1';
+
     let i = 0;
-    const typeWriter = () => {
-        if (i < text.length) {
-            tagline.textContent += text.charAt(i);
-            i++;
-            setTimeout(typeWriter, 100);
-        }
-    };
-    
-    setTimeout(typeWriter, 1000);
-}
-
-// Add pulse animation to logo on scroll
-let lastScroll = 0;
-window.addEventListener('scroll', () => {
-    const currentScroll = window.pageYOffset;
-    const logo = document.querySelector('.logo-image');
-    
-    if (logo && currentScroll > lastScroll && currentScroll < 500) {
-        logo.style.transform = 'scale(1.05) rotate(2deg)';
-    } else if (logo) {
-        logo.style.transform = 'scale(1) rotate(0deg)';
+    function type() {
+      if (i < text.length) {
+        el.textContent += text.charAt(i++);
+        setTimeout(type, 100);
+      }
     }
-    
-    lastScroll = currentScroll;
-});
+    setTimeout(type, 1000);
+  }
 
-// Easter egg: Konami code
-let konamiCode = [];
-const konamiSequence = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
+  // -----------------------------
+  // LOGO PULSE ON SCROLL (subtle)
+  // -----------------------------
+  function updateLogoPulse() {
+    const logo = qs(SELECTORS.logoImage);
+    if (!logo) return;
+    if (lastScrollY > 0 && lastScrollY < 500) {
+      logo.style.transform = 'scale(1.05) rotate(2deg)';
+    } else {
+      logo.style.transform = 'scale(1) rotate(0deg)';
+    }
+  }
 
-document.addEventListener('keydown', (e) => {
-    konamiCode.push(e.keyCode);
-    konamiCode.splice(-konamiSequence.length - 1, konamiCode.length - konamiSequence.length);
-    
-    if (konamiCode.join('').includes(konamiSequence.join(''))) {
+  // -----------------------------
+  // KONAMI CODE EASTER EGG
+  // -----------------------------
+  function initKonami() {
+    const sequence = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+    const buffer = [];
+
+    on(document, 'keydown', (e) => {
+      const key = e.key.length === 1 ? e.key.toLowerCase() : e.key; // normalize letters to lower
+      buffer.push(key);
+      if (buffer.length > sequence.length) buffer.shift();
+
+      if (sequence.every((k, i) => buffer[i] === k)) {
         activateEasterEgg();
-    }
-});
+        buffer.length = 0;
+      }
+    });
 
-function activateEasterEgg() {
-    document.body.style.animation = 'rainbow 2s linear infinite';
-    
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes rainbow {
-            0% { filter: hue-rotate(0deg); }
-            100% { filter: hue-rotate(360deg); }
-        }
-    `;
-    document.head.appendChild(style);
-    
-    setTimeout(() => {
-        document.body.style.animation = '';
+    function activateEasterEgg() {
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes rainbow { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+        body.__rainbow { animation: rainbow 2s linear infinite; }
+      `;
+      document.head.appendChild(style);
+
+      document.body.classList.add('__rainbow');
+      setTimeout(() => {
+        document.body.classList.remove('__rainbow');
         style.remove();
-    }, 5000);
-}
+      }, 5000);
+    }
+  }
 
-// Preload images for smooth experience
-const imagesToPreload = [
-    'public/blue.png',
-    'public/yellow.png',
-    'public/red.png',
-    'public/grey.png'
-];
+  // -----------------------------
+  // PRELOAD IMAGES
+  // -----------------------------
+  function preloadImages(srcs) {
+    srcs.forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
+  }
 
-imagesToPreload.forEach(src => {
-    const img = new Image();
-    img.src = src;
-});
+  // -----------------------------
+  // LAZY-LOAD IFRAMES
+  // -----------------------------
+  function initLazyIframes() {
+    const iframes = qsa(SELECTORS.iframeLazy);
+    if (!iframes.length) return;
 
-// Performance optimization: Lazy load iframes
-const iframeObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
             const iframe = entry.target;
             if (iframe.dataset.src) {
-                iframe.src = iframe.dataset.src;
-                iframe.removeAttribute('data-src');
+              iframe.src = iframe.dataset.src;
+              iframe.removeAttribute('data-src');
             }
-            iframeObserver.unobserve(iframe);
-        }
-    });
-}, { rootMargin: '200px' });
+            obs.unobserve(iframe);
+          }
+        });
+      },
+      { rootMargin: '200px' }
+    );
 
-document.querySelectorAll('iframe[data-src]').forEach(iframe => {
-    iframeObserver.observe(iframe);
-});
+    iframes.forEach((f) => obs.observe(f));
+  }
 
-// Add touch support for mobile
-let touchStartY = 0;
-document.addEventListener('touchstart', (e) => {
-    touchStartY = e.touches[0].clientY;
-});
+  // -----------------------------
+  // TOUCH SUPPORT (mobile)
+  // -----------------------------
+  function initTouchScrollClass() {
+    let touchStartY = 0;
+    on(document, 'touchstart', (e) => (touchStartY = e.touches[0].clientY), passive);
+    on(
+      document,
+      'touchmove',
+      (e) => {
+        const diff = touchStartY - e.touches[0].clientY;
+        if (Math.abs(diff) > 5) document.body.classList.add('scrolling');
+      },
+      passive
+    );
+    on(document, 'touchend', () => setTimeout(() => document.body.classList.remove('scrolling'), 100), passive);
+  }
 
-document.addEventListener('touchmove', (e) => {
-    const touchY = e.touches[0].clientY;
-    const diff = touchStartY - touchY;
-    
-    if (Math.abs(diff) > 5) {
-        document.body.classList.add('scrolling');
+  // -----------------------------
+  // ACCESSIBILITY: REDUCED MOTION
+  // -----------------------------
+  function initReducedMotion() {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (mq.matches) {
+      document.documentElement.classList.add('reduced-motion');
+      // Prefer handling via CSS using `.reduced-motion * { animation: none !important; transition: none !important; }`
+      // Avoid forcing inline styles on every element for performance.
     }
-});
+  }
 
-document.addEventListener('touchend', () => {
-    setTimeout(() => {
-        document.body.classList.remove('scrolling');
-    }, 100);
-});
+  // -----------------------------
+  // LANGUAGE SWITCHER UI
+  // -----------------------------
+  function initLangSwitcher() {
+    qsa(SELECTORS.langBtn).forEach((btn) => {
+      on(btn, 'click', function () {
+        const lang = this.getAttribute('data-lang');
+        if (!lang || lang === currentLanguage) return;
+        translatePage(lang);
 
-// Add reduced motion support for accessibility
-const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-
-if (prefersReducedMotion.matches) {
-    document.querySelectorAll('*').forEach(el => {
-        el.style.animation = 'none';
-        el.style.transition = 'none';
+        // Click micro-animation
+        this.style.transform = 'scale(0.9)';
+        setTimeout(() => (this.style.transform = 'scale(1)'), 100);
+      });
     });
-}
+  }
 
-// Console easter egg
-console.log('%c🎵 Welcome to the Artist Page! 🎵', 'font-size: 20px; color: #ab1707; font-weight: bold;');
-console.log('%cLike what you see? Follow us on social media!', 'font-size: 14px; color: #fffefa;');
+  // -----------------------------
+  // CONSOLE EASTER EGG
+  // -----------------------------
+  function consoleGreeting() {
+    // Keep the emojis in console only; they don't affect UI.
+    // If you don't want them, remove this block.
+    // eslint-disable-next-line no-console
+    console.log('%c🎵 Welcome to the Artist Page! 🎵', 'font-size: 20px; color: #ab1707; font-weight: bold;');
+    // eslint-disable-next-line no-console
+    console.log('%cLike what you see? Follow us on social media!', 'font-size: 14px; color: #fffefa;');
+  }
+
+  // -----------------------------
+  // INIT
+  // -----------------------------
+  on(document, 'DOMContentLoaded', () => {
+    // i18n
+    translatePage(getInitialLanguage());
+    initLangSwitcher();
+    on(window, 'languageChanged', (e) => {
+      // Hook for dynamic i18n content if needed
+      // eslint-disable-next-line no-console
+      console.log(`Language changed to: ${e.detail.language}`);
+    });
+
+    // visual / UX
+    initAOS();
+    initSmoothAnchors();
+    initRipples();
+    initCursorTrail();
+    fadeInOnLoad();
+    scatterCrows();
+    initStreamingHover();
+    initPlayButtons();
+    initProgressBar();
+    initSocialHover();
+    initReleaseCards();
+    initCardGlow();
+    initTypewriter();
+    initKonami();
+    initLazyIframes();
+    initTouchScrollClass();
+    initReducedMotion();
+    consoleGreeting();
+
+    // Preload assets
+    preloadImages(['public/blue.png', 'public/yellow.png', 'public/red.png', 'public/grey.png']);
+
+    // Scroll-driven effects (parallax, progress, logo pulse)
+    on(window, 'scroll', onScroll, passive);
+    // trigger initial pass
+    onScroll();
+  });
+})();

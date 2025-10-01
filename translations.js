@@ -83,6 +83,11 @@ const translations = {
     }
 };
 
+// Browser global
+if (typeof window !== "undefined") {
+  window.translations = translations;
+}
+
 // Export for use in main.js
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = translations;
