@@ -6,12 +6,22 @@
     box-sizing: border-box;
 }
 
-:root {
+/* TODO: USE THIS ON PROD */
+/* :root {
     --black: #0b090a;
-    --red-very-dark: #ab1707;
     --red-dark: #8b0d0b;
     --red-darker: #670e04;
     --red-accent: #ab1707;
+    --white: #fffefa;
+    --white-alt: #f8f8f8;
+    --grey: #d3d3d3;
+} */
+
+:root {
+    --black: #0b090a;
+    --red-dark: #888888;
+    --red-darker: #636363;
+    --red-accent: #a6a6a6;
     --white: #fffefa;
     --white-alt: #f8f8f8;
     --grey: #d3d3d3;
