@@ -9,7 +9,7 @@
   // -----------------------------
   // CONFIG & CONSTANTS
   // -----------------------------
-  const SUPPORTED_LANGS = ['en', 'de', 'es', 'fr'];
+  const SUPPORTED_LANGS = ['ru', 'en', 'de'];
   const STORAGE_KEYS = { preferredLanguage: 'preferredLanguage' };
   const SELECTORS = {
     langBtn: '.lang-btn',
@@ -27,6 +27,14 @@
     aos: '[data-aos]',
     iframeLazy: 'iframe[data-src]',
   };
+  const COLORS = {
+    red_darker_transp: '#6868684d'
+  }
+  
+  // TODO USE THIS ON PROD
+  // const COLORS = {
+  //   red_darker_transp: '#7a12064d'
+  // };
 
   // Parallax registry
   const parallaxItems = []; // { el, speed, baseTransform }
@@ -54,12 +62,12 @@
   // -----------------------------
   // INTERNATIONALIZATION
   // -----------------------------
-  let currentLanguage = 'en';
+  let currentLanguage = 'ru';
 
   function detectBrowserLanguage() {
-    const browserLang = navigator.language || navigator.userLanguage || 'en';
+    const browserLang = navigator.language || navigator.userLanguage || 'ru';
     const code = browserLang.split('-')[0].toLowerCase();
-    return SUPPORTED_LANGS.includes(code) ? code : 'en';
+    return SUPPORTED_LANGS.includes(code) ? code : 'ru';
   }
 
   function getInitialLanguage() {
@@ -250,52 +258,66 @@
   // -----------------------------
   // RANDOM CROWS IN HERO
   // -----------------------------
-  function scatterCrows() {
+  function scatterParticles() {
     const hero = qs(SELECTORS.hero);
     if (!hero) return;
 
-    // Create a single positioned layer for crows
-    let crowLayer = hero.querySelector('.hero-crows-layer');
-    if (!crowLayer) {
-      crowLayer = document.createElement('div');
-      crowLayer.className = 'hero-crows-layer';
-      Object.assign(crowLayer.style, {
+    // const particleFiles = ['crow1.png', 'crow2.png', 'crow3.png']; //todo use this on prod
+    const particleFiles = ['dummy.png'];
+    const minScale = 0.05;
+    const maxScale = 0.3;
+    const layerCount = 4; // you can increase for more depth
+    const count = 30 / layerCount; // total particles divided by layers
+
+    // Create multiple layers for parallax depth
+    for (let layer = 1; layer <= layerCount; layer++) {
+      addParticleLayer(hero, layer, count, minScale, maxScale, particleFiles);
+    }
+  }
+
+  function addParticleLayer(hero, layerNumber, count, minScale, maxScale, particleFiles) {
+    // Create a single positioned layer for particles
+    let particleLayer = hero.querySelector(`.hero-particles-layer-${layerNumber}`);
+    if (!particleLayer) {
+      particleLayer = document.createElement('div');
+      particleLayer.className = `hero-particles-layer-${layerNumber}`;
+      Object.assign(particleLayer.style, {
         position: 'absolute',
         inset: '0',
         pointerEvents: 'none',
+        zIndex: 0,
         overflow: 'hidden'
       });
       hero.style.position ||= 'relative';
-      hero.appendChild(crowLayer);
+      hero.appendChild(particleLayer);
     }
 
-    // const crowFiles = ['crow1.png', 'crow2.png', 'crow3.png']; //todo use this on prod
-    const crowFiles = ['dummy.png'];
-    const minScale = 0.05;
-    const maxScale = 0.1;
-    const count = 30;
-
+    
     for (let i = 0; i < count; i++) {
-      const img = document.createElement('img');
-      const crow = crowFiles[Math.floor(Math.random() * crowFiles.length)];
-      const scale = Math.random() * (maxScale - minScale) + minScale;
-      const rotation = Math.floor(Math.random() * 360);
-
-      img.src = `public/crows/${crow}`;
-      Object.assign(img.style, {
-        position: 'absolute',
-        left: `${Math.random() * 100}%`,
-        top: `${Math.random() * 100}%`,
-        transform: `translate(-50%, -50%) scale(${scale}) rotate(${rotation}deg)`,
-        transformOrigin: 'center',
-        userSelect: 'none'
-      });
-
-      crowLayer.appendChild(img);
+      const img = createRandomParticle(minScale, maxScale, particleFiles);
+      particleLayer.appendChild(img);
     }
 
     // Register the whole layer for parallax (match hero title/avatar speed)
-    registerParallax(crowLayer, 0.5); // adjust to taste
+    registerParallax(particleLayer, 0.2 * layerNumber); // adjust to taste
+  }
+
+  function createRandomParticle(minScale, maxScale, particleFiles) {
+    const img = document.createElement('img');
+    const particle = particleFiles[Math.floor(Math.random() * particleFiles.length)];
+    const scale = Math.random() * (maxScale - minScale) + minScale;
+    const rotation = Math.floor(Math.random() * 360);
+
+    img.src = `public/particles/${particle}`;
+    Object.assign(img.style, {
+      position: 'absolute',
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      transform: `translate(-50%, -50%) scale(${scale}) rotate(${rotation}deg)`,
+      transformOrigin: 'center',
+      userSelect: 'none'
+    });
+    return img;
   }
 
 
@@ -419,7 +441,7 @@
             position: 'absolute',
             width: '200px',
             height: '200px',
-            background: 'radial-gradient(circle, rgba(171, 23, 7, 0.3) 0%, transparent 70%)',
+            background: `radial-gradient(circle, ${COLORS.red_darker_transp} 0%, transparent 60%)`,
             borderRadius: '50%',
             pointerEvents: 'none',
             transform: 'translate(-50%, -50%)',
@@ -630,7 +652,7 @@
     initRipples();
     initCursorTrail();
     fadeInOnLoad();
-    scatterCrows();
+    scatterParticles();
     initStreamingHover();
     initPlayButtons();
     initProgressBar();
@@ -649,7 +671,7 @@
 
     // Register hero pieces for parallax
     registerParallax(qs('.hero-content .hero-title'), 0.5);   // header title
-    registerParallax(qs('.hero-content .hero-avatar'), 0.5);  // hero avatar
+    registerParallax(qs('.hero-content .artist-logo'), 0.5);  // hero avatar
     // If you prefer different depths, vary speeds: title 0.45, avatar 0.5, crows 0.5
 
     // Scroll-driven effects (parallax, progress, logo pulse)
