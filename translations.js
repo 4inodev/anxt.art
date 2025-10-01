@@ -2,37 +2,37 @@
 
 const translations = {
     ru: {
-        'tagline': 'Теглайн на русском',
-        'listen-now': 'Треки на площадках',
-        'latest-releases': 'Последние релизы',
-        'socials': 'Соц. сети',
-        'new-single': 'Новый сингл',
-        'footer-rights': 'Все права защищены',
-        'press-kit': 'Пресс-кит',
-        'contact': 'Связаться',
-        'privacy': 'Конфиденциальность'
+        'tagline': 'Лорем ипсум',
+        'listen-now': 'Лорем ипсум',
+        'latest-releases': 'Лорем ипсум',
+        'socials': 'Лорем ипсум',
+        'new-single': 'Лорем ипсум',
+        'footer-rights': 'Лорем ипсум',
+        'press-kit': 'Лорем ипсум',
+        'contact': 'Лорем ипсум',
+        'privacy': 'Лорем ипсум',
     },
     en: {
-        'tagline': 'Tagline english',
-        'listen-now': 'Listen Now',
-        'latest-releases': 'Latest Releases',
-        'socials': 'Connect',
-        'new-single': 'New Single',
-        'footer-rights': 'All rights reserved',
-        'press-kit': 'Press Kit',
-        'contact': 'Contact',
-        'privacy': 'Privacy'
+        'tagline': 'Lorem ipsum',
+        'listen-now': 'Lorem ipsum',
+        'latest-releases': 'Lorem ipsum',
+        'socials': 'Lorem ipsum',
+        'new-single': 'Lorem ipsum',
+        'footer-rights': 'Lorem ipsum',
+        'press-kit': 'Lorem ipsum',
+        'contact': 'Lorem ipsum',
+        'privacy': 'Lorem ipsum',
     },
     de: {
-        'tagline': 'Tagline auf Deutsch',
-        'listen-now': 'Jetzt anhören',
-        'latest-releases': 'Neueste Veröffentlichungen',
-        'socials': 'Verbinden',
-        'new-single': 'Neue Single',
-        'footer-rights': 'Alle Rechte vorbehalten',
-        'press-kit': 'Pressekit',
-        'contact': 'Kontakt',
-        'privacy': 'Datenschutz'
+        'tagline': 'Das Lorem von ipsum',
+        'listen-now': 'Das Lorem von ipsum',
+        'latest-releases': 'Das Lorem von ipsum',
+        'socials': 'Das Lorem von ipsum',
+        'new-single': 'Das Lorem von ipsum',
+        'footer-rights': 'Das Lorem von ipsum',
+        'press-kit': 'Das Lorem von ipsum',
+        'contact': 'Das Lorem von ipsum',
+        'privacy': 'Das Lorem von ipsum'
     }
 };
 
