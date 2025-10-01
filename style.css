@@ -111,7 +111,8 @@ body {
     font-family: 'Odachi', sans-serif;
     /* letter-spacing: 0.1em; */
     margin-bottom: 20px;
-    background: linear-gradient(135deg, var(--red-darker) 0%, var(--red-accent) 100%);
+    /* white background */
+    background: linear-gradient(90deg, var(--white), var(--white-alt));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
