@@ -273,7 +273,7 @@
     const minScale = 0.05;
     const maxScale = 0.3;
     const layerCount = 4; // you can increase for more depth
-    const count = 30 / layerCount; // total particles divided by layers
+    const count = 15 / layerCount; // total particles divided by layers
 
     // Create multiple layers for parallax depth
     for (let layer = 1; layer <= layerCount; layer++) {
