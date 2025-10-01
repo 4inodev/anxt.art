@@ -286,7 +286,7 @@
         inset: '0',
         pointerEvents: 'none',
         zIndex: 0,
-        overflow: 'hidden'
+        overflow: 'hidden', // Prevent particles from escaping the Hero section
       });
       hero.style.position ||= 'relative';
       hero.appendChild(particleLayer);
@@ -670,8 +670,7 @@
     preloadImages(['public/blue.png', 'public/yellow.png', 'public/red.png', 'public/grey.png']);
 
     // Register hero pieces for parallax
-    registerParallax(qs('.hero-content .hero-title'), 0.5);   // header title
-    registerParallax(qs('.hero-content .artist-logo'), 0.5);  // hero avatar
+    registerParallax(qs('.hero-content'), 0.5);   // header title
     // If you prefer different depths, vary speeds: title 0.45, avatar 0.5, crows 0.5
 
     // Scroll-driven effects (parallax, progress, logo pulse)

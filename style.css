@@ -66,6 +66,8 @@ body {
     position: relative;
     background: url('/public/image.png') no-repeat center center;
     background-size: cover; /* scales image to fill hero */
+    overflow: hidden; /* Add this to prevent particles from overflowing */
+    z-index: 1; /* Ensure it has a controlled z-index */
 }
 
 .hero-content {
@@ -635,4 +637,14 @@ body.language-changing [data-i18n] {
 [data-parallax] {
   transform: var(--parallax-base, none) translate3d(0, var(--py, 0px), 0);
   will-change: transform;
+}
+
+.hero-particles-layer-1,
+.hero-particles-layer-2,
+.hero-particles-layer-3,
+.hero-particles-layer-4 {
+    position: absolute;
+    pointer-events: none;
+    inset: 0;
+    z-index: 0; /* Keep particles below all hero content */
 }
