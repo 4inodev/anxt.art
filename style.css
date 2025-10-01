@@ -6,6 +6,13 @@
     box-sizing: border-box;
 }
 
+@font-face {
+  font-family: 'Odachi';
+  src: url('/public/fonts/odachi/odachi.woff') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
 /* TODO: USE THIS ON PROD */
 /* :root {
     --black: #0b090a;
@@ -100,14 +107,17 @@ body {
 
 .artist-name {
     font-size: clamp(3rem, 8vw, 6rem);
-    font-weight: 900;
-    letter-spacing: 0.1em;
+    font-weight: 800;
+    font-family: 'Odachi', sans-serif;
+    /* letter-spacing: 0.1em; */
     margin-bottom: 20px;
-    background: linear-gradient(135deg, var(--white) 0%, var(--red-accent) 100%);
+    background: linear-gradient(135deg, var(--red-darker) 0%, var(--red-accent) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     animation: fadeInUp 1s ease;
+    padding-left: 0.2em; /* Add left padding to prevent clipping */
+    padding-right: 0.2em; /* Add right padding to prevent clipping */
 }
 
 .tagline {
