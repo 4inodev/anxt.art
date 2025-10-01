@@ -28,6 +28,17 @@
     iframeLazy: 'iframe[data-src]',
   };
 
+  // Parallax registry
+  const parallaxItems = []; // { el, speed, baseTransform }
+  function registerParallax(el, speed = 0.5) {
+    if (!el) return;
+    parallaxItems.push({
+      el,
+      speed,
+      baseTransform: el.style.transform || ''
+    });
+  }
+
   // -----------------------------
   // UTILITIES
   // -----------------------------
@@ -112,24 +123,28 @@
   let lastScrollY = window.pageYOffset || 0;
   let ticking = false;
 
-  function parallaxTick() {
+  function tick() {
     ticking = false;
-    const hero = qs(SELECTORS.heroContent);
-    if (!hero) return;
-    const y = lastScrollY;
-    hero.style.transform = `translateY(${y * 0.5}px)`;
-    hero.style.opacity = String(1 - clamp(y / 600, 0, 1));
+
+    // Apply parallax to all registered layers
+    for (const item of parallaxItems) {
+      const ty = lastScrollY * item.speed; // tweak speeds per layer
+      item.el.style.transform = `${item.baseTransform} translateY(${ty}px)`;
+    }
+
+    updateProgressBar();   // you already have this
+    updateLogoPulse();     // you already have this
   }
 
   function onScroll() {
     lastScrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
     if (!ticking) {
       ticking = true;
-      raf(parallaxTick);
-      raf(updateProgressBar);
-      raf(updateLogoPulse);
+      requestAnimationFrame(tick);
     }
   }
+
+
 
   // -----------------------------
   // SMOOTH IN-PAGE ANCHOR SCROLL
@@ -239,7 +254,23 @@
     const hero = qs(SELECTORS.hero);
     if (!hero) return;
 
-    const crowFiles = ['crow1.png', 'crow2.png', 'crow3.png'];
+    // Create a single positioned layer for crows
+    let crowLayer = hero.querySelector('.hero-crows-layer');
+    if (!crowLayer) {
+      crowLayer = document.createElement('div');
+      crowLayer.className = 'hero-crows-layer';
+      Object.assign(crowLayer.style, {
+        position: 'absolute',
+        inset: '0',
+        pointerEvents: 'none',
+        overflow: 'hidden'
+      });
+      hero.style.position ||= 'relative';
+      hero.appendChild(crowLayer);
+    }
+
+    // const crowFiles = ['crow1.png', 'crow2.png', 'crow3.png']; //todo use this on prod
+    const crowFiles = ['dummy.png'];
     const minScale = 0.05;
     const maxScale = 0.1;
     const count = 30;
@@ -257,13 +288,16 @@
         top: `${Math.random() * 100}%`,
         transform: `translate(-50%, -50%) scale(${scale}) rotate(${rotation}deg)`,
         transformOrigin: 'center',
-        pointerEvents: 'none',
-        userSelect: 'none',
+        userSelect: 'none'
       });
 
-      hero.appendChild(img);
+      crowLayer.appendChild(img);
     }
+
+    // Register the whole layer for parallax (match hero title/avatar speed)
+    registerParallax(crowLayer, 0.5); // adjust to taste
   }
+
 
   // -----------------------------
   // HOVER INTENSITY (visual-only sound hint)
@@ -612,6 +646,11 @@
 
     // Preload assets
     preloadImages(['public/blue.png', 'public/yellow.png', 'public/red.png', 'public/grey.png']);
+
+    // Register hero pieces for parallax
+    registerParallax(qs('.hero-content .hero-title'), 0.5);   // header title
+    registerParallax(qs('.hero-content .hero-avatar'), 0.5);  // hero avatar
+    // If you prefer different depths, vary speeds: title 0.45, avatar 0.5, crows 0.5
 
     // Scroll-driven effects (parallax, progress, logo pulse)
     on(window, 'scroll', onScroll, passive);
