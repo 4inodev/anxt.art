@@ -144,11 +144,17 @@
     updateLogoPulse();     // you already have this
   }
 
+  let scrollRafId = null;
+
   function onScroll() {
     lastScrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
-    if (!ticking) {
-      ticking = true;
-      requestAnimationFrame(tick);
+
+    // Throttle scroll handler using requestAnimationFrame
+    if (!scrollRafId) {
+      scrollRafId = requestAnimationFrame(() => {
+        tick(); // Process parallax, progress bar, etc.
+        scrollRafId = null; // Release frame lock
+      });
     }
   }
 

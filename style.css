@@ -27,8 +27,13 @@
     --grey: #d3d3d3;
 }
 
-html {
-    scroll-behavior: smooth;
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; /* Prevent side-scroll */
+  overscroll-behavior: contain; /* Prevent bouncing scrolling effects */
+  scroll-behavior: smooth; /* Enable smooth in-page scroll */
+  touch-action: manipulation; /* Disable unnecessary gestures during scroll */
 }
 
 body {
