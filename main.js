@@ -268,10 +268,10 @@
     const hero = qs(SELECTORS.hero);
     if (!hero) return;
 
-    // const particleFiles = ['crow1.png', 'crow2.png', 'crow3.png']; //todo use this on prod
-    const particleFiles = ['dummy.png'];
+    const particleFiles = ['crow1.png', 'crow2.png', 'crow3.png']; //todo use this on prod
+    // const particleFiles = ['dummy.png'];
     const minScale = 0.05;
-    const maxScale = 0.3;
+    const maxScale = 0.2;
     const layerCount = 4; // you can increase for more depth
     const count = 15 / layerCount; // total particles divided by layers
 
@@ -312,7 +312,9 @@
     const img = document.createElement('img');
     const particle = particleFiles[Math.floor(Math.random() * particleFiles.length)];
     const scale = Math.random() * (maxScale - minScale) + minScale;
-    const rotation = Math.floor(Math.random() * 360);
+    // Limit rotation so the "bottom" is still roughly pointing downwards
+    // Range: -90deg (left) to +90deg (right)
+    const rotation = Math.random() * 180 - 90;
 
     img.src = `public/particles/${particle}`;
     Object.assign(img.style, {

@@ -69,7 +69,7 @@ body {
     align-items: center;
     justify-content: center;
     position: relative;
-    background: url('/public/image.png') no-repeat center center;
+    background: url('/public/hero_bg.jpg') no-repeat center center;
     background-size: cover; /* scales image to fill hero */
     overflow: hidden; /* Add this to prevent particles from overflowing */
     z-index: 1; /* Ensure it has a controlled z-index */
